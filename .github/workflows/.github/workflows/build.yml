@@ -1,0 +1,32 @@
+name: Build Android APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23' # Стабильная версия Go для сборщика
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Fyne CLI
+        run: go install fyne.io/fyne/v2/cmd/fyne@latest
+
+      - name: Build APK
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          # Робот сам включит CGO и соберет APK
+          CGO_ENABLED=1 fyne package -os android -appID com.recovery.app
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-android-app
+          path: ./*.apk
